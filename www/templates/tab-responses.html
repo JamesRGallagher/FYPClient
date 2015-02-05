@@ -1,0 +1,9 @@
+<ion-view view-title="Responses">
+  <ion-content>
+    <ion-list>
+      <ion-item  ng-repeat="response in responses" type="item-text-wrap" href="#/tab/response/{{response.id}}">
+        <h2>{{response.name}}</h2>
+      </ion-item>
+    </ion-list>
+  </ion-content>
+</ion-view>
