@@ -10,7 +10,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
 .run(function($ionicPlatform, $interval, UserLocation,$http) {
   $ionicPlatform.ready(function() {
 
-
+    window.droidlat = 0;
+    window.droidlng = 0;
     // Your app must execute AT LEAST ONE call for the current position via standard Cordova geolocation,
     //  in order to prompt the user for Location permission.
     window.navigator.geolocation.getCurrentPosition(function(location) {
@@ -37,6 +38,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     * This callback will be executed every time a geolocation is recorded in the background.
     */
     var callbackFn = function(location) {
+        window.droidlat = location.latitude;
+        window.droidlng = location.longitude;
         data = {
           'lat':location.latitude,
           'long':location.longitude
@@ -55,14 +58,23 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     }
 
     // BackgroundGeoLocation is highly configurable.
-    bgGeo.configure(callbackFn, failureFn, {      
+
+    console.log('pre android post')
+    console.log(window.droidlat)
+    console.log(window.droidlat)
+    bgGeo.configure(callbackFn, failureFn, {
+        url: 'https://demo-project-jamesgallagher-2.c9.io/api/users/54c5a9b7531157e769000001', // <-- Android ONLY:  your server url to send locations to
+        params: {
+            'lat': window.droidlat,    //  <-- Android ONLY:  HTTP POST params sent to your server when persisting locations.
+            'long': window.droidlng                              //  <-- Android ONLY:  HTTP POST params sent to your server when persisting locations.
+        },
         desiredAccuracy: 10,
         stationaryRadius: 20,
         distanceFilter: 30,
         notificationTitle: 'Background tracking', // <-- android only, customize the title of the notification
         notificationText: 'ENABLED', // <-- android only, customize the text of the notification
         activityType: 'AutomotiveNavigation',
-        debug: true, // <-- enable this hear sounds for background-geolocation life-cycle.
+        debug: false, // <-- enable this hear sounds for background-geolocation life-cycle.
         stopOnTerminate: false // <-- enable this to clear background location settings when the app terminates
     });
 
