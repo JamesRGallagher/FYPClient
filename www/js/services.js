@@ -21,52 +21,20 @@ angular.module('starter.services', [])
 
 })
 
-.factory('Requests', function() {
+.factory('Requests', function($http,$ionicLoading) {
+  $ionicLoading.show({
+      //template: 'SGe...',
+      showBackdrop: true
+  });
   // Might use a resource here that returns a JSON array
 
-  // Some fake testing data
-  var requests = [{
-    id: 0,
-    name: 'James Gallagher',
-    lastText: 'Is it busy?',
-    lat: 0,
-    lng: 0
-  }, {
-    id: 1,
-    name: 'Someone Else',
-    lastText: 'What is the weather like?',
-    lat: 35.6895,
-    lng: 139.6917
-  }, {
-    id: 2,
-    name: 'Test User',
-    lastText: 'Is there a queue?',
-    lat: 51.5072,
-    lng: 0.1275
-  }, {
-    id: 3,
-    name: 'Real Person',
-    lastText: 'Are there spare seats?',
-    lat: 33.527625,
-    lng: -112.262559
-  }];
 
   return {
-    all: function() {
-      return requests;
-    },
-    remove: function(request) {
-      requests.splice(requests.indexOf(request), 1);
-    },
-    get: function(requestId) {
-      for (var i = 0; i < requests.length; i++) {
-        if (requests[i].id === parseInt(requestId)) {
-          return requests[i];
-        }
-      }
-      return null;
+    get: function(callback) {
+     return $http.get('https://fypserver-jamesgallagher.c9.io/api/requests/').success(callback);
     }
   }
+   
 })
 
 /**
