@@ -44,7 +44,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
           'lat':location.latitude,
           'long':location.longitude
         }
-        $http.put('https://demo-project-jamesgallagher-2.c9.io/api/users/54c5a9b7531157e769000001',data)
+        $http.put('https://fypserver-jamesgallagher.c9.io/api/users/'+document.getElementById('userid').innerHTML,data)
         console.log('[js] BackgroundGeoLocation callback:  ' + location.latitude + ',' + location.longitude);
         // Do your HTTP request here to POST location to your server.
         //
@@ -63,7 +63,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     console.log(window.droidlat)
     console.log(window.droidlat)
     bgGeo.configure(callbackFn, failureFn, {
-        url: 'https://demo-project-jamesgallagher-2.c9.io/api/users/54c5a9b7531157e769000001', // <-- Android ONLY:  your server url to send locations to
+        url: 'https://fypserver-jamesgallagher.c9.io/api/users/'+document.getElementById('userid').innerHTML, // <-- Android ONLY:  your server url to send locations to
         params: {
             'lat': window.droidlat,    //  <-- Android ONLY:  HTTP POST params sent to your server when persisting locations.
             'long': window.droidlng                              //  <-- Android ONLY:  HTTP POST params sent to your server when persisting locations.
@@ -108,6 +108,15 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
   // Set up the various states which the app can be in.
   // Each state's controller can be found in controllers.js
   $stateProvider
+  .state('signin', {
+      url: '/sign-in',
+      templateUrl: 'templates/sign-in.html',
+      controller: 'SignInCtrl'
+    })
+    .state('register', {
+      url: '/register',
+      templateUrl: 'templates/register.html'
+    })
 
     .state('review-image', {
       url: '/image',
@@ -190,6 +199,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
 
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/tab/dash');
+  $urlRouterProvider.otherwise('/sign-in');
 
 });

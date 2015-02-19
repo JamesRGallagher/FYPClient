@@ -27,11 +27,19 @@ angular.module('starter.services', [])
       showBackdrop: true
   });
   // Might use a resource here that returns a JSON array
-
+  var requests;
 
   return {
+    set: function(data) {
+        requests = data;
+    },
+    getLocal: function(){
+      return requests;
+    },
     get: function(callback) {
-     return $http.get('https://fypserver-jamesgallagher.c9.io/api/requests/').success(callback);
+
+      console.log('!!')
+     return $http.get('https://fypserver-jamesgallagher.c9.io/api/requests/?user_id='+document.getElementById('userid').innerHTML).success(callback);
     }
   }
    
