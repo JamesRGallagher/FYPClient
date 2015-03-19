@@ -1,5 +1,16 @@
 <ion-view view-title="Home">
-  <ion-content >
+  <ion-content>
+  <div id="mapSearch" class="bar bar-header item-input-inset">
+  <label class="item-input-wrapper">
+    <i class="icon ion-ios7-search placeholder-icon"></i>
+    <input  id = "pac-input" type="text" g-places-autocomplete ng-model="myScopeVar" />
+  </label>
+  <button id="clearButton" class="button button-clear">
+    Cancel
+  </button>
+</div>
     <div id="map" data-tap-disabled="true"></div>
+    <div id="mapHolder"></div>
+
   </ion-content>
 </ion-view>

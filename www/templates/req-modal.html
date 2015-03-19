@@ -1,0 +1,31 @@
+<div class="modal">
+<ion-header-bar >
+   <h1 class="title">Send Request</h1>
+</ion-header-bar>
+<ion-content>
+   <span id="mapHolder">
+   <div  id="modal-map"></div>
+   </spam>
+   <div class="list">
+      <label class="item item-input">
+      <span class="input-label" >Request:</span>
+      <input placeholder="What do you want to know?" type="text" ng-model="contact.name">
+      </label>
+      <label class="item item-input item-select">
+         <span class="input-label">Time:</span>
+         <select class="center">
+            <option>10 Minutes</option>
+            <option>1 Hour</option>
+            <option>1 Day</option>
+            <option>1 Week</option>
+         </select>
+      </label>
+      <label class="item item-input">
+      <i class="icon ion-ios7-sunny-outline"></i>
+      <input type="range" id="circle_radius" name="volume" min="100" max="3000" value="500">
+      <i class="icon ion-ios7-sunny"></i>
+      </label>
+      <label class="item item-input">
+      <button class="button button-full button-balanced" ng-click="closeModal()">Send Request!</button>
+</ion-content>
+</div>

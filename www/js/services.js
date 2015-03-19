@@ -4,11 +4,8 @@ angular.module('starter.services', [])
   var getUserLocation = function(){
         navigator.geolocation.getCurrentPosition(function(position) {alert(position.coords.latitude)});
     }
-
-
  return {
     get: function() {
-      alert('Yeah.')
       return location;
     },
   }
@@ -20,13 +17,26 @@ angular.module('starter.services', [])
 
 
 })
-
 .factory('Requests', function($http,$ionicLoading) {
   $ionicLoading.show({
-      //template: 'SGe...',
       showBackdrop: true
   });
-  // Might use a resource here that returns a JSON array
+  var requests;
+
+  return {
+    set: function(data) {
+        requests = data;
+    },
+    getLocal: function(){
+      return requests;
+    }
+  } 
+})
+
+.factory('MyRequests', function($http,$ionicLoading) {
+  $ionicLoading.show({
+      showBackdrop: true
+  });
   var requests;
 
   return {
@@ -37,41 +47,39 @@ angular.module('starter.services', [])
       return requests;
     },
     get: function(callback) {
+      var returnData;
+      console.log('!!')
+      $ionicLoading.hide()
+        $http.get('https://fypserver-jamesgallagher.c9.io/api/requests/'+document.getElementById('userid').innerHTML)
+         .success(function(data) {
+          console.log(':0')
+             returnData = data;
+       }) 
+    
+    return   returnData;
+  }
+  } 
+})
+.factory('Responses', function($http,$ionicLoading) {
+  $ionicLoading.show({
+      showBackdrop: true
+  });
+  var responses
+  return {
+    set: function(data) {
+        console.log("setting responses to be:")
+        console.log(data)
+        responses = data;
+        $ionicLoading.hide()
+    },
+    getLocal: function(){
+      return responses;
+    },
+    get: function(callback) {
 
       console.log('!!')
-     return $http.get('https://fypserver-jamesgallagher.c9.io/api/requests/?user_id='+document.getElementById('userid').innerHTML).success(callback);
+     return $http.get('https://fypserver-jamesgallagher.c9.io/api/responses/'+document.getElementById('userid').innerHTML).success(callback);
     }
   }
    
 })
-
-/**
- * A simple example service that returns some data.
- */
-.factory('Responses', function() {
-  // Might use a resource here that returns a JSON array
-
-  // Some fake testing data
-  var responses = [{
-    id: 0,
-    name: 'A. User',
-    notes: 'Test 1',
-    image: 'http://www.webbaviation.co.uk/lancaster/lancaster-uk-ba13213.jpg'
-  }, {
-    id: 1,
-    name: 'Test User',
-    notes: 'Test 2',
-    image: "http://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Judges'_Lodgings,_Lancaster_4.jpg/320px-Judges'_Lodgings,_Lancaster_4.jpg"
-  }];
-
-
-  return {
-    all: function() {
-      return responses;
-    },
-    get: function(responseId) {
-      // Simple index lookup
-      return responses[responseId];
-    }
-  }
-});

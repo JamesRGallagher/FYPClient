@@ -1,255 +1,454 @@
 angular.module('starter.controllers', ['ui.router'])
-.controller('SignInCtrl', function($scope, $state,$http,$ionicPopup) {
-  ///  $scope.toRegister = function(user) {
-   // }
 
 
-  $scope.signIn = function(user) {
-    var requestData = {'user_id':user.username, 'pass':user.password }
-    $http.post("https://fypserver-jamesgallagher.c9.io/api/auth", requestData).success(
-    function(responseData) {
-        if(responseData.length > 0){
-        document.getElementById('userid').innerHTML = responseData[0]._id;
-        $state.go('tab.dash');
-    } else {
-        alertPopup = $ionicPopup.alert({
-     title: 'Sorry..',
-     template: 'There has been an error:('
-   });
-    }
+
+/************* Sign In Ctrl ************/
+.controller('SignInCtrl', function($scope, $state, $http, $ionicPopup) {
     
-    })
-    .error(function(){
-     alertPopup = $ionicPopup.alert({
-     title: 'Sorry..',
-     template: 'There has been an error:('
-   });
-    });
-    
-  }
-})
-    .controller('DashCtrl', function($scope, $ionicLoading, $compile,$http) {
-        function initialize() {
-                $ionicLoading.show({
-                    content: 'Getting current location...',
-                    showBackdrop: false
-                });
-                var myLatlng;
-                navigator.geolocation.getCurrentPosition(function(pos) {
-                    myLatlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                    var mapOptions = {
-                        center: myLatlng,
-                        zoom: 16,
-                        mapTypeId: google.maps.MapTypeId.ROADMAP
-                    }
-                    var map = new google.maps.Map(document.getElementById("map"),
-                        mapOptions);
-                    $scope.map = map;
-                    $scope.marker = null;
-                    google.maps.event.addDomListener(window, 'load', initialize);
-                    google.maps.event.addListener(map, 'click', function(e) {
-                        console.log(e)
-                        if ($scope.marker) {
-                            $scope.marker.setVisible(false);
-                            if ($scope.infowindow) {
-                                $scope.infowindow.close()
+    $scope.signIn = function(user) {
+        var requestData = {
+            'user_id': user.username,
+            'pass': user.password
+        }
+
+        $http.post("https://fypserver-jamesgallagher.c9.io/api/auth", requestData).success(
+        //If the server says we are successful
+        function(responseData) {
+            //Double check!
+            if (responseData.length > 0) {
+                //Set the user ID in the DOM. Behaves as a token before any real
+                //authentication is implemented.
+                document.getElementById('userid').innerHTML = responseData[0]._id;
+                //Initalise the onNotifiction function.
+                onNotification = function(e) {
+                    switch (e.event) {
+                        //The first event the device will recieive is the registered event
+                        //This means we can update the user in the database with a gcmRedId
+                        case 'registered':
+                        if (e.regid.length > 0) {
+                            var userID = document.getElementById('userid').innerHTML;
+                            $http.put("https://fypserver-jamesgallagher.c9.io/api/users/" + userID, {
+                                'gcmRegId': e.regid
+                            })
+                            
+                        }
+                        break;
+                        case 'message':
+                        if (e.foreground) {
+                            //   alert('Push notificaiton while the app was open')
+                            } else {
+                            if (e.coldstart) {
+                                //      alert('got coldstart')
+                                } else {
+                                "alert('Push notificaiton while the app was closed')"
                             }
                         }
-                        var pos = e.latLng;
-                        console.log('pos2',pos)
-                        //Marker + infowindow + angularjs compiled ng-click
-                        var contentString = "<div><textarea id='reqText' placeholder = 'Please enter your request'></textarea><a onclick='sendRequest("+pos.k+","+pos.D+")'>Send!</a></div>";
-                        var compiled = $compile(contentString)($scope);
-                        console.log(compiled)
-                        var user_id = document.getElementById('userid').innerHTML;
-                        console.log(document.getElementById('reqText'))
-                        sendRequest = function(latitude,longitude) {
-                            console.log('posistion',pos)
-                            var id = document.getElementById('userid').innerHTML;
-                            var msg = document.getElementById('reqText').value
-                            var d = new Date();
-                            var time = d.getTime();
-                            var obj = new Object();
-                            console.log(latitude)
-                            obj.userid = document.getElementById('userid').innerHTML;
-                            obj.state = "0";
-                            obj.time = time;
-                            obj.lat = latitude;
-                            obj.long = longitude;
-                            obj.message = msg;
-                            obj.ttl = null;
-
-                            console.log(JSON.stringify(obj))
-                           // $http.post('https://fypserver-jamesgallagher.c9.io/api/requests', obj)
-                            $http.post('https://fypserver-jamesgallagher.c9.io/api/requests',obj).
-                                success(function(data, status, headers, config) {
-                                console.log("success")
-                            }).
-                            error(function(data, status, headers, config) {
-                                //called asynchronously if an error occurs
-                                // or server returns response with an error status.
-                             });
-                            
-                        };
-                        var infowindow = new google.maps.InfoWindow({
-                            content: compiled[0]
-                        });
-                        var marker = new google.maps.Marker({
-                            position: pos,
-                            map: map,
-                        });
-                        $scope.marker = marker;
-                        infowindow.open(map, marker);
-                        $scope.infowindow = infowindow;
-                    })
-                    $ionicLoading.hide();
-                }, function(error) {
-                    alert('Unable to get location: ' + error.message);
-                    myLatlng = new google.maps.LatLng(43.07493, -89.381388);
-                });
-                console.log('init')
-                console.log(map)
-            }
-            //})
-        initialize()
-    })
-    .controller('RequestsCtrl', function($scope, Requests,$ionicLoading,$http) {
-         $scope.doRefresh = function() {
-
-        var onSuccess = function(position) {
-       
-
-        data = {
-          'lat':position.coords.latitude,
-          'long':position.coords.longitude
-        }
-        $http.put('https://fypserver-jamesgallagher.c9.io/api/users/'+document.getElementById('userid').innerHTML,data).success(function(data, status, headers, config) {
-                                console.log('https://fypserver-jamesgallagher.c9.io/api/users/'+document.getElementById('userid').innerHTML)
-
-                            })
-        }
-
-        // onError Callback receives a PositionError object
-    //
-        function onError(error) {
-         alert('code: '    + error.code    + '\n' +
-          'message: ' + error.message + '\n');
-        }
-
-        navigator.geolocation.getCurrentPosition(onSuccess, onError);
-
-
-
-        $http.get('https://fypserver-jamesgallagher.c9.io/api/requests?user_id='+document.getElementById('userid').innerHTML)
-         .success(function(newItems) {
-               $scope.requests = newItems;
-               Requests.set(newItems);
-               console.log($scope.requests)
-         })
-        .finally(function() {
-          // Stop the ion-refresher from spinning
-          $scope.$broadcast('scroll.refreshComplete');
-         // $scope.$apply();
-         });
-        };
-        Requests.get(function(data) {
-            Requests.set(data);
-            $ionicLoading.hide()
-            $scope.requests = data;
-            console.log('IN HERE')
-        });
-        $scope.remove = function(request) {
-            Requests.remove(request);
-        }
-    })
-    .controller('RequestDetailCtrl', function($scope,$state,$ionicLoading, $stateParams, $window,Requests,$http) { 
-            var data = Requests.getLocal()
-            console.log(data)
-            for(i = 0; i< data.length; i++){
-                if(data[i]._id==$stateParams.requestId){
-                    $scope.request = data[i];
-                    console.log(data[i])
-                    
+                        break;
+                        
+                        case 'error':
+                        alert('error')
+                        break;
+                        
+                        default:
+                        alert('<li>EVENT -> Unknown, an event was received and we do not know what it is</li>');
+                        break;
+                    }
                 }
+                //Go to the main screen.
+                $state.go('tab.dash');
+                } else {
+                //Handle error
+                alertPopup = $ionicPopup.alert({
+                    title: 'Sorry..',
+                    template: 'There has been an error:('
+                });
             }
-            function initialize() {
-                console.log($scope.request)
-         //   myLatlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-            var mapOptions = {
-             zoom: 8,
-            center: new google.maps.LatLng($scope.request.lat, $scope.request.long)
-                 };
-            map = new google.maps.Map(document.getElementById('map2'),
-                 mapOptions);
-            
-                var marker = new google.maps.Marker({
-      position: new google.maps.LatLng($scope.request.lat, $scope.request.long),
-      map: map,
-      title: $scope.request.message
-  });
-
-            }
-
-           
-            
-initialize()
-        
-        console.log($scope.request.lat)
-               
-     
-                     $scope.getPicture = function(){
-        //console.log('Getting..');
-       //  $state.transitionTo("review-image");
-       
-       // document.getElementById('imageHolder').innerHTML = '<div id="cover" style="background-color:grey"></div>'
-        navigator.camera.getPicture(onSuccess, onFail, { quality: 50,destinationType: Camera.DestinationType.DATA_URL});
-
-        function onSuccess(imageData) {
-            $ionicLoading.show({
-                    template: 'Sending your response...',
-                    showBackdrop: true
+        })
+        //Handle error
+        .error(function() {
+            alertPopup = $ionicPopup.alert({
+                title: 'Sorry..',
+                template: 'There has been an error:('
             });
-            var data = new Object;
-            data.reqid =  $scope.request;
-            data.userid = document.getElementById('userid').innerHTML;
-            data.time = new Date().getTime();
-            data.image = imageData;
-            $http.post('https://fypserver-jamesgallagher.c9.io/api/response',data).success(function() {
-               alert('success!')
-             })
-          
+        });
+    }
+})
+/************* End of Sign In Ctrl ************/
 
-            //$state.go('the-state-name-in-quotes','{}')
-            //$state.go("review-image");
-           // document.getElementById('cover').innerHTML = '<img class="imgPreview" width= "100%" height = "90%" id="image"></img><button id="cancel" class="button subbutton"   style="width:49%:" onclick ="document.getElementById(\'cover\').style.display = \'none\'">Cancel</button><button id="send" class="button subbutton"  style="float:right; width:49%" onclick ="document.getElementById(\'cover\').style.display = \'none\'">Send</button>';
-              
-            //document.getElementById('cover').style.display = "block";
-        }
 
-        function onFail(message) {
-             alert('Failed because: ' + message);
+/************* RegisterCtrl ************/
+//Very simple.
+.controller('RegisterCtrl', function($scope, $state, $http, $ionicPopup) {
+    $scope.register = function(user) {
+        $http.post('https://fypserver-jamesgallagher.c9.io/api/users', user).
+        success(function(data, status, headers, config) {
+            $state.go('signin');
+        }).
+        error(function(data, status, headers, config) {
+            alert('error registering')
+            
+        });
+    }
+})
+/************ End of RegisterCtrl ***********/
+
+
+
+/************* DashCtrl ************/
+/** Contains much of the Google maps stuff */
+.controller('DashCtrl', function($scope, $ionicLoading, $compile, $http, $ionicPopup, $ionicModal) {
+   
+    //Global map object will hold native map.
+    window.map;
+    
+    //Flag - reflects if the maps is active.
+    window.mapClickableToggle = 1;
+
+    //The usersLocation
+    var userLocation;
+   
+    //When the device is ready
+    document.addEventListener("deviceready", function() {
         
+        //when the input is selected 
+        $scope.$on('g-places-autocomplete:select', function(event, param) {
+           
+            //allow clicks on the map
+            plugin.google.maps.Map.getMap(document.getElementById("map")).setClickable(true)
+            
+            //Geocode:
+            
+            var address = param.formatted_address;
+            
+            var geocoder = new google.maps.Geocoder();
+            geocoder.geocode({
+                'address': address
+                }, function(results, status) {
+                
+                pointLocation = new plugin.google.maps.LatLng(results[0].geometry.location.lat(), results[0].geometry.location.lng());
+                
+                plugin.google.maps.Map.getMap(document.getElementById("map")).animateCamera({
+                    'target': pointLocation,
+                    'tilt': 60,
+                    'zoom': 10,
+                    
+                });
+            });
+        });
+        
+
+        
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            
+            //Set the users loation
+            userLocation = new plugin.google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        
+            var div = document.getElementById("map");
+            
+            //Init the map
+            window.map = plugin.google.maps.Map.getMap(div, {
+                'backgroundColor': 'white',
+                'mapType': plugin.google.maps.MapTypeId.ROADMAP,
+                'controls': {
+                    'compass': true,
+                    'myLocationButton': true,
+                    'indoorPicker': true,
+                    'zoom': true
+                },
+                'gestures': {
+                    'scroll': true,
+                    'tilt': true,
+                    'rotate': true,
+                    'zoom': true
+                },
+                'camera': {
+                    'latLng': userLocation,
+                    'tilt': 30,
+                    'zoom': 15,
+                    'bearing': 50
+                }
+
+                //Add events - such as long click
+                }).on(plugin.google.maps.event.MAP_LONG_CLICK, function(latLng) {
+                //On long ciick, shrink the map
+                $('#map').animate({
+                    height: '40%'
+                }, 300);
+
+                //And animate the camera to where was selected
+                var thisMap = plugin.google.maps.Map.getMap(document.getElementById("map"));
+                thisMap.animateCamera({
+                    'target': latLng,
+                    'zoom': 12,
+                    'duration': 10
+                })
+                
+                //Add a marker
+                thisMap.addMarker({
+                    'position': latLng
+                })      
+                
+                //Hide the search UI and replase it with the form that slides up.
+                $('#mapSearch').hide();
+                $('#mapHolder').append('<span id = "reqForm"><div class="item range"><input id="radiusSlider" type="range" min="1100" max = "1500" name="volume"></div><label class="item item-input"> <input id="requestText" type="text" placeholder="Request"></label><label class="item item-input item-select"><div class="input-label">Timeframe</div><select><option>1 Hour</option><option selected>1 Day</option> <option>1 Week</option></select></label><button id = "reqSend" class="button button-full button-balanced">Send!</button><button id = "reqCancel" class="button button-full button-positive">Cancel</button></span>');
+                
+                //As the radius changes, the camera is animated
+                $('#radiusSlider').on("input", function() {
+                    thisMap.animateCamera({
+                        'target': latLng,
+                        'zoom': Math.abs((1100 + (1500 - $(this).val())) / 100),
+                        'duration': 10
+                    })
+                });
+                
+                //On cancel, go back to how we were.
+                $('#reqCancel').on("click", function() {
+                    $("#reqForm").remove();
+                    $("#map").animate({
+                        height: '95%'
+                    }, 300);
+                    $('#mapSearch').show();     
+                })
+                
+
+                //On send
+                $('#reqSend').on("click", function() {
+                    //Get the date
+                    var d = new Date();
+                    //Get the time
+                    var time = d.getTime();
+                    //Create a new object
+                    var obj = new Object();
+                    //Populare the object
+                    obj.userid = document.getElementById('userid').innerHTML;
+                    obj.state = "0";
+                    obj.time = time;
+                    obj.lat = latLng.lat;
+                    obj.long = latLng.lng;
+                    obj.ttl = null;
+                    obj.message = document.getElementById('requestText').value;
+                    
+                    //and send it
+                    $http.post('https://fypserver-jamesgallagher.c9.io/api/requests', obj).
+                    //Show an alert on success, and revert.
+                    success(function(data, status, headers, config) {
+                        $ionicPopup.alert({
+                            title: '<i class="ion-checkmark-circled"></i>',
+                            template: 'Request Sent!'
+                            }).then(function() {
+                            $("#reqForm").remove();
+                            $("#map").animate({
+                                height: '95%'
+                            }, 300);
+                            $('#mapSearch').show();
+                        });
+                        
+                    }).
+                    //Show an alert on error, and revert.
+                    error(function(data, status, headers, config) {
+                        $ionicPopup.alert({
+                            title: 'There hase been an error:(',
+                            template: 'Request Not Sent'
+                            }).then(function() {
+                            $("#reqForm").remove();
+                            $("#map").animate({
+                                height: '95%'
+                            }, 300);
+                            $('#mapSearch').show();
+                        });
+                    });
+                    
+                })
+                
+            });
+            //reset the map.
+            $("#clearButton").on('click', function() {
+                plugin.google.maps.Map.getMap(document.getElementById("map")).setClickable(true);
+            })
+        });
+        var input = document.getElementById('pac-input');
+        input.addEventListener("click", function() {
+            alert(plugin.google.maps.Map.getMap(document.getElementById("map")))
+            plugin.google.maps.Map.getMap(document.getElementById("map")).setClickable(false)
+        });
+        
+    }, false); 
+    
+    
+})
+/*************End of DashCtrl ************/
+
+
+
+
+/************* RequestsCtrl ************/
+.controller('RequestsCtrl', function($scope, Requests, $ionicLoading, $http) {
+
+    //Screen refresh
+    $scope.doRefresh = function() {     
+        //Update users location sever side, to ensure accurate
+        var onSuccess = function(position) {     
+            data = {
+                'lat': position.coords.latitude,
+                'long': position.coords.longitude
+            }
+            $http.put('https://fypserver-jamesgallagher.c9.io/api/users/' + document.getElementById('userid').innerHTML, data).success(function(data, status, headers, config) {
+            })
+        }
+        //Handle the error
+        function onError(error) {
+            alert('code: ' + error.code + 'n' +
+            'message: ' + error.message + 'n');
+        }
+        
+        navigator.geolocation.getCurrentPosition(onSuccess, onError);
+        
+        
+        //Get new requests
+        $http.get('https://fypserver-jamesgallagher.c9.io/api/requests?user_id=' + document.getElementById('userid').innerHTML)
+        //Update the UI
+        .success(function(newItems) {
+            $scope.requests = newItems;
+            Requests.set(newItems);
+        })
+        .finally(function() {    
+            $scope.$broadcast('scroll.refreshComplete');   
+        });
+    };
+
+    //Get new requests on navigation, rest is same as before.
+    $http.get('https://fypserver-jamesgallagher.c9.io/api/requests?user_id=' + document.getElementById('userid').innerHTML)
+    .success(function(newItems) {  
+        $scope.requests = newItems;
+        Requests.set(newItems)
+        $ionicLoading.hide()
+    })
+    $scope.remove = function(request) {
+        Requests.remove(request);
+    }
+})
+/************* End Of RequestsCtrl ************/
+
+
+
+
+
+/*************RequestsDetailCtrl ************/
+.controller('RequestDetailCtrl', function($scope, $state, $ionicLoading, $stateParams, $window, Requests, $http) {
+    
+    //Get any cached data
+    var data = Requests.getLocal()
+    
+    //Find the correct request
+    for (i = 0; i < data.length; i++) {
+        if (data[i]._id == $stateParams.requestId) {     
+            $scope.request = data[i];
         }
     }
+    
+    //Initalise the map
+    function initialize() {
 
-
-
-        
-    })
-    .controller('ResponsesCtrl', function($scope, Responses) {
-        $scope.responses = Responses.all();
-    })
-
-    .controller('ResponseDetailCtrl', function($scope, $stateParams, Responses) {
-        $scope.response = Responses.get($stateParams.responseId);
-    })
-
-    .controller('ImageController', function($scope, $stateParams) {
-        alert('Here!')
-    })
-
-    .controller('AccountCtrl', function($scope) {
-        $scope.settings = {
-            enableFriends: true
+        var mapOptions = {
+            zoom: 16,
+            center: new google.maps.LatLng($scope.request.lat, $scope.request.long)
         };
-    });
+
+        map = new google.maps.Map(document.getElementById('map2'),mapOptions);
+        
+        var marker = new google.maps.Marker({
+            position: new google.maps.LatLng($scope.request.lat, $scope.request.long),
+            map: map,
+            title: $scope.request.message
+        });     
+    } 
+
+    initialize()  
+    
+    //Call on the camera
+    $scope.getPicture = function() {
+        document.getElementById('imageHolder').innerHTML = '<div id="cover" style="background-color:grey"></div>'
+        navigator.camera.getPicture(onSuccess, onFail, {
+            quality: 50,
+            destinationType: Camera.DestinationType.DATA_URL
+        });
+        
+        //If the image data is captured, send it as a base 64 String.
+        function onSuccess(imageData) {
+            $ionicLoading.show({
+                template: 'Sending your response...',
+                showBackdrop: true
+            });
+            var data = new Object;
+            data.reqid = $scope.request._id;
+            data.userid = document.getElementById('userid').innerHTML;
+            data.recipId = $scope.request.userid;
+            data.time = new Date().getTime();
+            data.image = "data:image/png;base64," + imageData;
+            $http.post('https://fypserver-jamesgallagher.c9.io/api/response', data).success(function() {
+                $ionicLoading.hide()
+            })
+        }  
+        function onFail(message) {
+            alert('Failed because: ' + message);
+        }
+    }   
+})
+/************* End Of RequestsDetailCtrl ************/
+
+
+
+/************* ResponsesCtrl ************/
+//Very simple.
+.controller('ResponsesCtrl', function($scope, MyRequests, $http, $ionicLoading) {   
+    $scope.doRefresh = function() {
+        $http.get('https://fypserver-jamesgallagher.c9.io/api/requests/' + document.getElementById('userid').innerHTML)
+        .success(function(newItems) {
+            $scope.myRequests = newItems;
+            MyRequests.set(newItems);
+        })
+        .finally(function() {
+            $scope.$broadcast('scroll.refreshComplete');
+        });
+    };
+    
+    $http.get('https://fypserver-jamesgallagher.c9.io/api/requests/' + document.getElementById('userid').innerHTML)
+    .success(function(data) {
+        MyRequests.set(data);
+        $ionicLoading.hide()
+        $scope.myRequests = data;
+        MyRequests.set(data);
+    })   
+    $scope.remove = function(myRequests) {
+        MyRequests.remove(myRequests);
+    }
+})
+/************* End of ResponsesCtrl ************/
+
+
+.controller('ResponseListCtrl', function($scope, MyRequests, $stateParams, Responses) {
+    var data = MyRequests.getLocal()
+    for (i = 0; i < data.length; i++) {
+        if (data[i]._id == $stateParams.requestId) {
+            $scope.responses = data[i].responses;
+            Responses.set(data[i].responses)   
+        }
+    }
+})
+
+.controller('ResponseDetailCtrl', function($scope, $stateParams, MyRequests, Responses) {
+    var data = Responses.getLocal()
+    for (i = 0; i < data.length; i++) {
+        if (data[i]._id == $stateParams.responseId)
+            $scope.response = data[i];     
+    }
+})
+
+.controller('ImageController', function($scope, $stateParams) {
+    
+})
+.controller('AccountCtrl', function($scope) {
+    $scope.settings = {
+        enableFriends: true
+    };
+});
