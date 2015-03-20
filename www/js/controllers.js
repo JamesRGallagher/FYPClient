@@ -268,7 +268,6 @@ angular.module('starter.controllers', ['ui.router'])
         });
         var input = document.getElementById('pac-input');
         input.addEventListener("click", function() {
-            alert(plugin.google.maps.Map.getMap(document.getElementById("map")))
             plugin.google.maps.Map.getMap(document.getElementById("map")).setClickable(false)
         });
         
